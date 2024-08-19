@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 @RestController
 @RequiredArgsConstructor
 public class ImageController {
+
     private final ImageRepository imageRepository;
 
     @GetMapping("/images/{id}")

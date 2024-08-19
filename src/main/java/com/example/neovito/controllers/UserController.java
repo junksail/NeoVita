@@ -1,8 +1,10 @@
 package com.example.neovito.controllers;
 
 import com.example.neovito.models.User;
-import com.example.neovito.service.UserService;
+import com.example.neovito.repositories.UserRepository;
+import com.example.neovito.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,8 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
-    private final UserService userService;
+
+    private final UserServiceImpl userServiceImpl;
 
     @GetMapping("/login")
     public String login() {
@@ -26,7 +30,7 @@ public class UserController {
 
     @PostMapping("/registration")
     public String createUser(User user, Model model) {
-        if(!userService.createUser(user)) {
+        if(!userServiceImpl.createUser(user)) {
             model.addAttribute("errorMessage", "Пользователь уже существует");
             return "registration";
         }

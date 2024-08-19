@@ -17,6 +17,7 @@ import java.security.Principal;
 @Controller
 @RequiredArgsConstructor
 public class ProductController {
+
     private final ProductService productService;
 
     @GetMapping("/")
@@ -48,6 +49,4 @@ public class ProductController {
         productService.deleteProduct(id);
         return "redirect:/";
     }
-
-
 }
