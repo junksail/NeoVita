@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -17,40 +18,51 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UserServiceImpl {
+public class UserService {
 
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
-
+    /**
+     Метод использует findByEmail() класса UserRepository для проверки наличия email в базе.
+     */
     public boolean createUser(User user){
         String email = user.getEmail();
         if (userRepository.findByEmail(user.getEmail()) != null) {
-            return false;
+            return false; // Если email в базе существует - запрещаем регестрацию;
         }
-        user.setActive(true);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.getRoles().add(Role.ROLE_USER);
+        user.setActive(true); // Переводим флажок в состояние активности;
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // Устанавливаем пользователю пароль;
+        user.getRoles().add(Role.ROLE_ADMIN); // Устанавливаем роль;
         log.info("Saving new user with email: {}", email);
-        userRepository.save(user);
+        userRepository.save(user); // Сохраняем пользователя в базе;
         return true;
     }
 
+    // Список пользователей;
     public List<User> list(){
         return userRepository.findAll();
     }
 
+    /**
+     Метод, позволяющий выдать администратора или наоборот, разжаловать.
+     */
     public void changeUserRoles(User user, Map<String, String> form) {
-        Set<String> roles = Arrays.stream(Role.values()).map(Role::name).collect(Collectors.toSet());
+        Set<String> roles = Arrays.stream(Role.values())
+                .map(Role::name)
+                .collect(Collectors.toSet());
         user.getRoles().clear();
-        for (String key : form.keySet()){
-            if(roles.contains(key)){
+        for (String key : form.keySet()) {
+            if (roles.contains(key)) {
                 user.getRoles().add(Role.valueOf(key));
             }
         }
         userRepository.save(user);
     }
 
+    /**
+     Метод сразу реализует бан и разбан, манипулируя флажком активности.
+     */
     public void banUser(Long id) {
         User user = userRepository.findById(id).orElse(null);
         if(user != null){
@@ -63,5 +75,11 @@ public class UserServiceImpl {
             }
         }
         userRepository.save(user);
+    }
+
+    // Получение пользователя по principal
+    public User getUserByPrincipal(Principal principal) {
+        if (principal == null) return new User();
+        return userRepository.findByEmail(principal.getName());
     }
 }

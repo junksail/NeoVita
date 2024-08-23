@@ -29,7 +29,7 @@ public class User implements UserDetails {
     private String name;
 
     @Column(name = "active")
-    private boolean active;
+    private boolean active; // Флажок активности
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "image_id")
@@ -38,13 +38,18 @@ public class User implements UserDetails {
     @Column(name = "password", length = 1000)
     private String password;
 
+    /**
+     * создание отдельной таблицы с id пользователей и их ролями
+     */
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role",
     joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
     private Set<Role> roles = new HashSet<>();
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "user")
     private List<Product> products = new ArrayList<>();
+
     private LocalDateTime dateOfCreated;
 
     public boolean isAdmin(){
@@ -65,7 +70,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return email; // Используем email в качестве уникального username
     }
 
     @Override
@@ -87,4 +92,5 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return active;
     }
+
 }

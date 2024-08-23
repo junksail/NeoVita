@@ -23,36 +23,27 @@ public class ProductService {
 
     private final UserRepository userRepository;
 
+    // Метод, возвращающий список продуктов;
     public List<Product> showAllProducts(String title) {
-        List<Product> products = productRepository.findAll();
         if (title != null) {
             return productRepository.findByTitle(title);
         }
         return productRepository.findAll();
     }
 
-    public void saveProduct(Principal principal, Product product, MultipartFile file1, MultipartFile file2, MultipartFile file3) throws IOException {
-        product.setUser(getUserByPrincipal(principal));
-        Image image1;
-        Image image2;
-        Image image3;
-        if(file1.getSize() != 0) {
-            image1 = toImageEntity(file1);
-            image1.setPreviewImage(true);
-            product.addImageToProduct(image1);
+    public void saveProduct(Principal principal, Product product, MultipartFile... files) throws IOException {
+        product.setUser(getUserByPrincipal(principal)); // Устанавливаем текущего пользователя;
+        for (int i = 0; i < files.length; i++) {
+            if (files[i] != null && files[i].getSize() > 0) {
+                Image image = toImageEntity(files[i]);
+                if (i == 0) {
+                    image.setPreviewImage(true);
+                }
+                product.addImageToProduct(image);  // Добавляем изображения к товару;
+            }
         }
-        if(file1.getSize() != 0) {
-            image2 = toImageEntity(file2);
-            product.addImageToProduct(image2);
-        }
-        if(file1.getSize() != 0) {
-            image3 = toImageEntity(file3);
-            product.addImageToProduct(image3);
-        }
-        log.info("Saving new Product. Title: {}, Author email: {}", product.getTitle(), product.getUser().getEmail());
-        Product productFromDatabase = productRepository.save(product);
-        productFromDatabase.setPreviewImageId(productFromDatabase.getImages().get(0).getId());
         productRepository.save(product);
+        log.info("Saving new Product. Title: {}, Author email: {}", product.getTitle(), product.getUser().getEmail());
     }
 
     public User getUserByPrincipal(Principal principal) {
@@ -60,6 +51,7 @@ public class ProductService {
         return userRepository.findByEmail(principal.getName());
     }
 
+    // Метод для преобразования изображения в возвращаемый объект;
     private Image toImageEntity(MultipartFile file) throws IOException {
         Image image = new Image();
         image.setName(file.getName());
@@ -70,11 +62,25 @@ public class ProductService {
         return image;
     }
 
-    public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+    // Метод для удаления товара;
+    public void deleteProduct(User user, Long id) {
+        Product product = productRepository.findById(id)
+                .orElse(null);
+        if (product != null) {
+            if (product.getUser().getId().equals(user.getId())) {
+                productRepository.delete(product);
+                log.info("Product with id = {} was deleted", id);
+            } else {
+                log.error("User: {} haven't this product with id = {}", user.getEmail(), id);
+            }
+        } else {
+            log.error("Product with id = {} is not found", id);
+        }
     }
 
+    // Получение товара по id;
     public Product getProductById(Long id){
         return productRepository.findById(id).orElse(null);
     }
+
 }

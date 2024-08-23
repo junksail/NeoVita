@@ -18,12 +18,14 @@ public class ImageController {
 
     private final ImageRepository imageRepository;
 
+    // Получение изображения по id;
     @GetMapping("/images/{id}")
     private ResponseEntity<?> getImageById(@PathVariable Long id) {
         Image image = imageRepository.findById(id).orElse(null);
         return ResponseEntity.ok().header("fileName", image.getOriginalFileName())
-                .contentType(MediaType.valueOf(image.getContentType()))
-                .contentLength(image.getSize())
-                .body(new InputStreamResource(new ByteArrayInputStream(image.getBytes())));
+                .contentType(MediaType.valueOf(image.getContentType())) // Преобразования типа фотографий;
+                .contentLength(image.getSize()) // Размер фотографии
+                .body(new InputStreamResource(new ByteArrayInputStream(image.getBytes()))); // Преобразование изображения в байты для хранения в БД
     }
+
 }
